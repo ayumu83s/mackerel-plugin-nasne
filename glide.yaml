@@ -1,0 +1,6 @@
+package: github.com/ayumu83s/mackerel-plugin-nasne
+import:
+- package: github.com/ayumu83s/go-nasne
+  subpackages:
+  - nasne
+- package: github.com/mackerelio/go-mackerel-plugin

@@ -1,0 +1,14 @@
+hash: 95d6cf71529d0051c5f800443a3284d7c846cb9a84fd0f59999bb493f6cedcc8
+updated: 2017-07-14T00:36:27.889656707+09:00
+imports:
+- name: github.com/ayumu83s/go-nasne
+  version: e84752525edea45e7ceb9de65007c56c84c6476d
+  subpackages:
+  - nasne
+- name: github.com/mackerelio/go-mackerel-plugin
+  version: 1ff72c945e0910135846705189c03639c4554bf2
+- name: github.com/mackerelio/golib
+  version: 4d9b32ed7013096e232206b27d4f81b9412919ce
+  subpackages:
+  - pluginutil
+testImports: []
