@@ -36,6 +36,13 @@ func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 				{Name: "total_count", Label: "Total Count"},
 			},
 		},
+		"record_fail_num": {
+			Label: labelPrefix + " Record Fail Num",
+			Unit:  "integer",
+			Metrics: []mp.Metrics{
+				{Name: "total_count", Label: "Total Count", Diff: true},
+			},
+		},
 	}
 }
 
@@ -59,6 +66,13 @@ func (p *NasnePlugin) FetchMetrics() (map[string]float64, error) {
 
 	// 空き容量
 	// 録画失敗の件数
+	ret["record_fail_num"] = 0
+	recNgList, err := p.nasneClient.Status.RecNgListGet(nil)
+	if err != nil {
+		fmt.Errorf("fail to RecNgListGet: %s")
+		return nil, err
+	}
+	ret["record_fail_num"] = float64(recNgList.Number)
 
 	return ret, nil
 }
