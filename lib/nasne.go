@@ -53,6 +53,26 @@ func (p *NasnePlugin) FetchMetrics() (map[string]float64, error) {
 
 	// 録画件数
 	ret["total_count"] = 0
+	recordedCount, err := p.getRecordedCount()
+	if err != nil {
+		return nil, err
+	}
+	ret["total_count"] = recordedCount
+
+	// 空き容量
+
+	// 録画失敗の件数
+	ret["record_fail_num"] = 0
+	recordFailNum, err := p.getRecordFailNum()
+	if err != nil {
+		return nil, err
+	}
+	ret["record_fail_num"] = recordFailNum
+
+	return ret, nil
+}
+
+func (p *NasnePlugin) getRecordedCount() (float64, error) {
 	args := &nasne.RecordedTitleListArgs{
 		RequestedCount: 1,
 	}
@@ -60,21 +80,18 @@ func (p *NasnePlugin) FetchMetrics() (map[string]float64, error) {
 	if err != nil {
 		// エラーだったどうするのが正解なんだろう
 		fmt.Errorf("fail to TitleListGet: %s")
-		return nil, err
+		return 0, err
 	}
-	ret["total_count"] = float64(titleList.TotalMatches)
+	return float64(titleList.TotalMatches), nil
+}
 
-	// 空き容量
-	// 録画失敗の件数
-	ret["record_fail_num"] = 0
+func (p *NasnePlugin) getRecordFailNum() (float64, error) {
 	recNgList, err := p.nasneClient.Status.RecNgListGet(nil)
 	if err != nil {
 		fmt.Errorf("fail to RecNgListGet: %s")
-		return nil, err
+		return 0, err
 	}
-	ret["record_fail_num"] = float64(recNgList.Number)
-
-	return ret, nil
+	return float64(recNgList.Number), nil
 }
 
 // Do the plugin
