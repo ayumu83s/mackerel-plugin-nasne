@@ -28,22 +28,25 @@ func (p *NasnePlugin) MetricKeyPrefix() string {
 // ここでグラフの定義
 func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 	labelPrefix := strings.Title(p.prefix)
-	return map[string]mp.Graphs{
-		"recorded_num": {
-			Label: labelPrefix + " Recorded Num",
-			Unit:  "integer",
-			Metrics: []mp.Metrics{
-				{Name: "total_count", Label: "Total Count"},
-			},
-		},
-		"record_fail_num": {
-			Label: labelPrefix + " Record Fail Num",
-			Unit:  "integer",
-			Metrics: []mp.Metrics{
-				{Name: "total_count", Label: "Total Count", Diff: true},
-			},
+
+	graphs := 2
+	ret := make(map[string]mp.Graphs, graphs)
+
+	ret["recorded_num"] = mp.Graphs{
+		Label: labelPrefix + " Recorded Num",
+		Unit:  "integer",
+		Metrics: []mp.Metrics{
+			{Name: "total_count", Label: "Total Count"},
 		},
 	}
+	ret["record_fail_num"] = mp.Graphs{
+		Label: labelPrefix + " Record Fail Num",
+		Unit:  "integer",
+		Metrics: []mp.Metrics{
+			{Name: "total_count", Label: "Total Count", Diff: true},
+		},
+	}
+	return ret
 }
 
 // FetchMetrics interface for mackerelplugin
