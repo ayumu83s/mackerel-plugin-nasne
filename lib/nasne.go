@@ -53,7 +53,7 @@ func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 			Metrics: []mp.Metrics{
 				{Name: usedMetricsKey, Label: "used", Stacked: true},
 				{Name: freeMetricsKey, Label: "free", Stacked: true},
-				{Name: totalMetricsKey, Label: "total", Stacked: true},
+				{Name: totalMetricsKey, Label: "total"},
 			},
 		}
 	}
