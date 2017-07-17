@@ -58,18 +58,12 @@ func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 		}
 	}
 
-	ret["recorded_num"] = mp.Graphs{
-		Label: labelPrefix + " Recorded Num",
+	ret["recorded"] = mp.Graphs{
+		Label: labelPrefix + " Recorded",
 		Unit:  "integer",
 		Metrics: []mp.Metrics{
 			{Name: "recorded_count", Label: "Recorded Count"},
-		},
-	}
-	ret["record_fail_num"] = mp.Graphs{
-		Label: labelPrefix + " Record Fail Num",
-		Unit:  "integer",
-		Metrics: []mp.Metrics{
-			{Name: "record_fail_count", Label: "Record Fail Count", Diff: true},
+			{Name: "recorded_fail_count", Label: "Recorded Fail Count", Diff: true},
 		},
 	}
 	return ret
@@ -105,12 +99,12 @@ func (p *NasnePlugin) FetchMetrics() (map[string]float64, error) {
 	ret["recorded_count"] = recordedCount
 
 	// 録画失敗の件数
-	ret["record_fail_count"] = 0
+	ret["recorded_fail_count"] = 0
 	recordFailNum, err := p.getRecordFailNum()
 	if err != nil {
 		return nil, err
 	}
-	ret["record_fail_count"] = recordFailNum
+	ret["recorded_fail_count"] = recordFailNum
 
 	return ret, nil
 }
@@ -132,7 +126,6 @@ func (p *NasnePlugin) fetchHddInfoList() error {
 	hddCount := hddList.Number
 	hddInfoList = make([](*nasne.HDDInfo), hddCount)
 	for i, hdd := range hddList.Hdd {
-		fmt.Println(i)
 		hddInfoList[i], err = p.nasneClient.Status.HDDInfoGet(nil, hdd.ID)
 		if err != nil {
 			fmt.Errorf("fail to HDDInfoGet(%d): %s", hdd.ID)
