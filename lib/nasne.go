@@ -16,6 +16,9 @@ type NasnePlugin struct {
 	nasneClient *nasne.Client
 }
 
+// グラフ定義で取得した値を保持して使いまわす
+var hddInfoList [](*nasne.HDDInfo)
+
 // MetricKeyPrefix interface for PluginWithPrefix
 func (p *NasnePlugin) MetricKeyPrefix() string {
 	if p.prefix == "" {
@@ -29,21 +32,44 @@ func (p *NasnePlugin) MetricKeyPrefix() string {
 func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 	labelPrefix := strings.Title(p.prefix)
 
-	graphs := 2
+	err := p.fetchHddInfoList()
+	if err != nil {
+		fmt.Errorf("fail to fetchHddList: %s")
+		return nil
+	}
+
+	graphs := 2 + len(hddInfoList)
 	ret := make(map[string]mp.Graphs, graphs)
+
+	for _, hddInfo := range hddInfoList {
+		graphsKey := fmt.Sprintf("HDD_%d", hddInfo.Hdd.ID)
+		usedMetricsKey := fmt.Sprintf("used_%d", hddInfo.Hdd.ID)
+		freeMetricsKey := fmt.Sprintf("free_%d", hddInfo.Hdd.ID)
+		totalMetricsKey := fmt.Sprintf("total_%d", hddInfo.Hdd.ID)
+
+		ret[graphsKey] = mp.Graphs{
+			Label: fmt.Sprintf("%s HDD %d", labelPrefix, hddInfo.Hdd.ID),
+			Unit:  "bytes",
+			Metrics: []mp.Metrics{
+				{Name: usedMetricsKey, Label: "used", Stacked: true},
+				{Name: freeMetricsKey, Label: "free", Stacked: true},
+				{Name: totalMetricsKey, Label: "total", Stacked: true},
+			},
+		}
+	}
 
 	ret["recorded_num"] = mp.Graphs{
 		Label: labelPrefix + " Recorded Num",
 		Unit:  "integer",
 		Metrics: []mp.Metrics{
-			{Name: "total_count", Label: "Total Count"},
+			{Name: "recorded_count", Label: "Recorded Count"},
 		},
 	}
 	ret["record_fail_num"] = mp.Graphs{
 		Label: labelPrefix + " Record Fail Num",
 		Unit:  "integer",
 		Metrics: []mp.Metrics{
-			{Name: "total_count", Label: "Total Count", Diff: true},
+			{Name: "record_fail_count", Label: "Record Fail Count", Diff: true},
 		},
 	}
 	return ret
@@ -54,25 +80,66 @@ func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 func (p *NasnePlugin) FetchMetrics() (map[string]float64, error) {
 	ret := make(map[string]float64)
 
+	// 空き容量
+	err := p.fetchHddInfoList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, hddInfo := range hddInfoList {
+		usedMetricsKey := fmt.Sprintf("used_%d", hddInfo.Hdd.ID)
+		freeMetricsKey := fmt.Sprintf("free_%d", hddInfo.Hdd.ID)
+		totalMetricsKey := fmt.Sprintf("total_%d", hddInfo.Hdd.ID)
+
+		ret[usedMetricsKey] = float64(hddInfo.Hdd.UsedVolumeSize)
+		ret[freeMetricsKey] = float64(hddInfo.Hdd.FreeVolumeSize)
+		ret[totalMetricsKey] = float64(hddInfo.Hdd.TotalVolumeSize)
+	}
+
 	// 録画件数
-	ret["total_count"] = 0
+	ret["recorded_count"] = 0
 	recordedCount, err := p.getRecordedCount()
 	if err != nil {
 		return nil, err
 	}
-	ret["total_count"] = recordedCount
-
-	// 空き容量
+	ret["recorded_count"] = recordedCount
 
 	// 録画失敗の件数
-	ret["record_fail_num"] = 0
+	ret["record_fail_count"] = 0
 	recordFailNum, err := p.getRecordFailNum()
 	if err != nil {
 		return nil, err
 	}
-	ret["record_fail_num"] = recordFailNum
+	ret["record_fail_count"] = recordFailNum
 
 	return ret, nil
+}
+
+func (p *NasnePlugin) fetchHddInfoList() error {
+	// すでにfetch済みならreturn
+	if hddInfoList != nil {
+		return nil
+	}
+
+	// 一覧を取得
+	hddList, err := p.nasneClient.Status.HDDListGet(nil)
+	if err != nil {
+		fmt.Errorf("fail to HDDListGet: %s")
+		return err
+	}
+
+	// 各詳細を取得
+	hddCount := hddList.Number
+	hddInfoList = make([](*nasne.HDDInfo), hddCount)
+	for i, hdd := range hddList.Hdd {
+		fmt.Println(i)
+		hddInfoList[i], err = p.nasneClient.Status.HDDInfoGet(nil, hdd.ID)
+		if err != nil {
+			fmt.Errorf("fail to HDDInfoGet(%d): %s", hdd.ID)
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *NasnePlugin) getRecordedCount() (float64, error) {
