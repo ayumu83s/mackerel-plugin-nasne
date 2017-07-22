@@ -27,4 +27,4 @@ command = "/path/to/mackerel-plugin-nasne 192.168.11.3"
 ```
 
 ## Screenshot
-![graphs-screenshot](https://user-images.githubusercontent.com/1732800/28264577-83b35940-6b26-11e7-8ac2-f11642672800.png)
+![graphs-screenshot](https://user-images.githubusercontent.com/1732800/28486860-0ff281f8-6ec2-11e7-9b6f-c5854908adc2.png)
