@@ -7,10 +7,11 @@ monitor the following items
 - recorded count
 - recording failures count
 
-## Build this program
+## How to install a plugin
+It is easy to use `mkr plugin install`
+
 ```shell
-glide install
-go build
+mkr plugin install ayumu83s/mackerel-plugin-nasne
 ```
 
 ## Synopsis
